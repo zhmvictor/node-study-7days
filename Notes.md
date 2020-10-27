@@ -592,12 +592,217 @@ module.exports = {
 };
 ```
 
-> 原理解析
+### exports 和 module.exports 的区别
+
+#### 区别
+
+- 每个模块中都有一个 module 对象
+- module 对象中有一个 exports 对象
+- 把需要导出的成员挂载到 module.exports 接口对象中，即`module.exports.xxx = xxx`
+- 每次都 `module.exports.xxx = xxx`写法很麻烦
+- 为了方便，Node 在每一个模块中都提供了一个成员：`exports`
+- `exports === module.exports`结果为 true
+- 对于 `module.exports.xxx = xxx`的方式完全可以简写成`exports.xxx = xxx`
+- 当一个模块想要导出单个成员时，必须使用：`module.exports = xxx`的方式
+- 不要使用 `exports = xxx`，不管用，因为每个模块最终向外`return`的是`module.exports`
+- 而 `exports`只是`module.exports`的一个引用
+- `exports = xxx`相当于拆开原来的引用，给 exports 指向了一个新的引用
+- 所以给`exports`重新赋值，不会影响`modlue.exports`
+- 可以用 `exports = module.exports` 重新建立起引用关系
+
+#### 原理解析
+
+> `exports` 和 `module.exports` 指向同一个引用
+
+```
+exports.foo = 'bar';
+// 等价于
+module.exports.foo = 'bar';
+
+console.log(exports === module.exports); // => true
+```
+
+```
+// exports 底层原理分析--可以认为：
+
+/**
+ * 一、
+ * 在 Node 中每个模块内部都有一个自己的 module 对象,
+ * 该 module 对象中，有一个成员叫 exports，
+ * 如果需要对外导出成员，只需要把导出的成员挂载到 module.exports。
+ */
+// const module = {
+//   exports: {
+//     foo: 'bar',
+//     add: function() {}
+//   }
+// };
+
+/**
+ * 二、
+ * 发现，每次导出接口成员时都通过 module.exports.xxx = xxx，写起来麻烦，
+ * Node 为了简化操作，专门提供以下一句代码：
+ */
+// let exports = module.exports;
+// 两者一致，说明可以用任何一方导出成员
+// console.loh(exports === module.exports); // true
 
 
+module.exports.foo = 'bar';
+module.exports.add = function() {}
+
+/**
+ * 三、
+ * 谁来 require 我，谁就得到 module.exports。
+ * 默认在代码的最后有一句：
+ */
+// return module.exports;
+
+```
 
 
+> `[].slice.call(obj);`
 
+```
+// 把对象变成数组，以便可以使用数组的方法
+// [].slice.call(obj);
+
+/**
+ * 解析：
+ * 1. call 方法的第一个参数是要绑定的对象，后面参数是函数调用时函数所需的参数
+ * 2. slice 方法需要传两个参数，slice(start, end)
+ * 3. 这样就可以解释的通为什么要判断 arguments 的长度了
+ *    3.1 arguments.length === 1，表示只传了一个参数，即start
+ *    3.2 arguments.length === 2，表示传了两个参数，即start和end
+ */
+Array.prototype.mySlice = function() {
+  let start = 0;
+  let end = this.length;
+  if(arguments.length === 1) {
+    start = arguments[0];
+  }
+  if(arguments.length === 2) {
+    start = arguments[0];
+    end = arguments[1];
+  }
+  let tmp = [];
+  for(let i = start; i < end; i++) {
+    tmp.push(this[i]);
+  }
+  return tmp;
+};
+
+let fakeArr = {
+  0: 'abc',
+  1: 'efg',
+  2: 'haha',
+  length: 3
+};
+
+console.log([].mySlice.call(fakeArr)); // => ['abc', 'efg', 'haha']
+```
+
+### require 方法加载规则
+
+----------------------------
+深入了解底层，参考：
+
+《深入浅出 Node.js》中的模块系统章节
+
+blog：[深入Node.js模块机制](https://blog.csdn.net/zhangyuan19880606/article/details/51508699)
+
+----------------------------
+
+
+#### 模块加载机制
+
+- 优先从缓存加载
+- 判断模块标识
+  - 核心模块
+    - `require('模块名')`
+    - 核心模块本质上也是文件
+    - 参考 github 源码
+  - 自定义模块
+    - 首位的 / 表示当前文件模块所属磁盘根目录，所以一般不用
+    - `require('../xx/模块名')`，通过路径寻找
+  - 第三方模块 `require('模块名')`
+    - 先找到当前文件所在目录中的 node_modules 目录
+    - node_modules/art-template
+    - node_modules/art-template/package.json
+    - node_modules/art-template/package.json 中的 main 属性（入口文件）
+    - 找到 main 属性中记录的模块的入口文件，如 index.js
+    - 若 package.json 文件或 main 指定的入口文件不存在，node 会自动找该目录下的 index.js，作为默认入口文件（这已经涉及 webpack 知识了）
+    - 如果以上所有条件都不成立，则会进入上一级目录中的 node_modules 目录，按上述方法查找
+    - 如果条件一直不成立，则会逐次向上级目录查找，直到当前磁盘根目录仍找不到
+    - 最后报错：`cannot find module xxx`
+- Node 官方文档也指出：在代码中，应该只引入本地的软件包 `require('本地软件包')`
+- 注意：一个项目有且只有一个 node_modules，放在项目根目录中，以便所有子目录都能找的到
+
+### npm -- node package manager（node 包管理工具）
+
+#### npm 网站
+
+#### npm 命令行工具
+
+> 升级 npm（自己升级自己）
+
+```
+npm install --global npm
+```
+
+> 常用命令
+
+参考文章：[npm 常用命令详解](https://www.cnblogs.com/PeunZhang/p/5553574.html)
+
+- npm init 
+  - npm init -y 跳过向导，快速生成
+- npm install
+  - 一次性安装全部依赖项
+- npm install 包名
+  - npm i 包名
+  - 只下载
+- npm install --sava 包名
+  - npm insatll -S 包名
+  - 下载并且将依赖项记录在 package.json 的 dependencies 选项中
+- npm uninstall 包名
+  - npm un 包名
+  - 只删除，依赖项记录仍会保存
+- npm uninstall --save 包名
+  - npm un -S 包名
+  - 删除的同时删除依赖信息
+- npm help
+  - 查看使用帮助
+- npm 命令 --help
+  - 查看指定命令的使用帮助
+
+#### 解决 npm 被墙问题
+
+使用 npm 淘宝镜像 cnpm，去官网查看下载安装方法
+
+如果不想安装 cnpm 又想使用淘宝服务器来下载：
+
+```
+npm install 包名 --registry=https://registry.npm.taobao.org
+```
+
+但是每次安装包都要手动执行以上命令很麻烦，可以把这个选项加入配置文件中：
+
+```
+npm config set registry https://registry.npm.taobao.org
+
+# 查看 npm 配置信息
+npm config list
+```
+
+只要配置了上面的命令，则以后所有的`npm install`都会默认通过淘宝服务器来下载
+
+**个人觉得还是安装一个全局的 cnpm 比较方便**
+
+### package.json
+
+- 包描述文件（里面包含安装的软件的信息和其他包相关描述信息）
+- `npm init -y` 按照默认配置自动生成 package.json 文件
+- 也可以`npm init`自己定义配置信息
 
 ## 7. Express
 
