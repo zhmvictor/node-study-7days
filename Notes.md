@@ -800,11 +800,237 @@ npm config list
 
 ### package.json
 
-- 包描述文件（里面包含安装的软件的信息和其他包相关描述信息）
+- 产品说明书（里面包含安装的软件的信息和其他包相关描述信息）
 - `npm init -y` 按照默认配置自动生成 package.json 文件
 - 也可以`npm init`自己定义配置信息
 
+
+# Node.js 第4天
+
+- Express
+- 基于文件做一套 CRUD
+
 ## 7. Express
+
+原生 http 在某些方面不足以满足开发需求，此时需要使用框架来提升开发效率，让我们的代码更高度统一。
+
+Node 中 web 开发框架之一：
+
+- [Express官网](http://expressjs.com/)
+
+### 安装使用
+
+```
+// 0. 安装
+// 1. 引包
+const express  = require('express');
+
+// 2. 创建 server
+const app = express();
+
+app.listen(3000, () => {
+  console.log('app is running at port 3000');
+});
+```
+
+### 基本路由
+
+路由
+  - 请求方法
+  - 请求路径
+  - 请求处理函数
+
+get
+
+```
+// 当以 GET 方法请求 / 的时候，执行对应的处理函数
+app.get('/', (req, res) => {
+  res.send('hello express!');
+});
+```
+
+post
+
+```
+// 当以 POST 方法请求 / 的时候，执行对应的处理函数
+app.post('/', (req, res) => {
+  res.send('Got a POST request');
+});
+```
+
+### 静态服务
+
+```
+// 当以 /public/ 开头的时候，去 ./public/ 目录中找对应的资源
+app.use('/public/', express.static('./public/'));
+
+// 当省略第一个参数时，可以通过省略 /public 路径的方式找资源
+app.use(express.static('./public/'));
+```
+
+三种使用静态资源的方式
+
+```
+# /public目录下资源
+app.use(express.static('public'));
+
+# /static/xxx
+app.use('/static', express.static('public'));
+
+app.use('/static', express.static(path.join(__dirname, 'public')));
+```
+
+### 模块标识中的 `/` 和 文件操作路径中的 `/`
+
+> 文件操作中的相对路径可以省略 ./
+
+```
+/**
+ * 在文件操作过程中
+ *   ./data/a.txt 相对于当前目录
+ *    data/a.txt  相对于当前目录
+ *    /data/a.txt 绝对路径：相对于当前文件所处磁盘根目录 
+ *    c:/xxx/...  绝对路径
+ */
+fs.readFile('data/a.txt', (err, data) => {
+  if(err) {
+    console.log('文件读取失败', err);
+    return;
+  }
+  console.log(data.toString());
+}); 
+```
+
+> 模块加载中，相对路径中的 ./ 不能省略
+
+```
+// 如果这里忽略了 .  则也是磁盘根目录
+require('/data/foo.js');
+
+// 相对路径
+require('./data/foo.js');
+```
+
+### 修改完代码服务自动重启
+
+使用第三方命令行工具`nodemon`来解决频繁修改代码重启服务器问题
+
+`nodemon`是一个基于Node.js开发的一个第三方命令行工具，使用时需要独立安装：
+
+```
+# 在任意目录执行该命令都可以
+# 也就是说，苏欧欧需要 -g 来安装的包都可以在任意目录执行
+npm install nodemon -g
+```
+
+安装完毕之后，使用：
+
+```
+node app.js
+
+# 使用 nodemon
+nodemon app.js
+```
+
+只要通过`nodemon app.js`启动的服务，它会监视你的文件变化。当文件发生变化时，自动帮你重启服务器。
+
+### 在 Express 中配置使用 art-template 模板引擎
+
+- [art-template-Github仓库](https://github.com/aui/art-template)
+- [art-template官方文档](http://aui.github.io/art-template/)
+
+安装
+
+```
+npm install --save art-template
+npm install --save express-art-template
+```
+
+配置
+
+```
+app.engine('art', require('express-art-template'));
+```
+
+使用
+
+```
+app.get('/', (req, res) => {
+  // express 默认会去项目目录中的 views 目录找 index.html
+  res.render('index.art', {
+    comments: dbData.comments
+  });
+});
+```
+
+如果希望修改默认的 `views` 视图渲染存储目录，可以：
+
+```
+// 注意：第一个参数 views 千万不可写错
+app.set('views', 目录路径);
+```
+
+### 在 Express 获取表单 GET 请求参数
+
+Express 内置 API，通过 `req.query`直接获取
+
+### 在 Express 获取表单 POST 请求体数据
+
+在 Express 中没有内置的获取表单 POST 请求体的 API，因此需要使用一个第三方包：`body-parser`。
+
+安装
+
+```
+npm install body-parser -S
+```
+
+配置
+
+```
+var express = require('express')
+var bodyParser = require('body-parser')
+
+var app = express()
+
+// 配置 body-parser
+// 只要加入这个配置，则在 req 请求对象上会多出一个属性：body
+// 可以直接通过 req.body 获取表单 POST 请求体数据
+// parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }))
+
+// parse application/json
+app.use(bodyParser.json())
+```
+
+使用
+
+```
+app.use(function (req, res) {
+  res.setHeader('Content-Type', 'text/plain')
+  res.write('you posted:\n')
+  res.end(JSON.stringify(req.body, null, 2))
+})
+```
+
+-----------------------------------------------------
+总结：
+
+### 演讲
+
+- 说服
+- ppt
+- 脑图
+- markdown
+- 结构思维
+
+- why 找痛点，为什么
+- what 解决方案，用什么东西
+- how 怎么去使用
+- where 在哪使用
+- when 什么时候使用
+
+-----------------------------------------------------
+
 
 
 
