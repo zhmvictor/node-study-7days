@@ -17,11 +17,14 @@ const bodyParser = require('body-parser');
 const app = express();
 const port = 3000;
 
+// 渲染模板引擎
 app.engine('html', require('express-art-template'));
 
+// 开放静态资源文件
 app.use('/node_modules/', express.static('../../node_modules/'));
 app.use('/public/', express.static('public'));
 
+// 配置解析POST请求体body的中间件：body-parser
 // 配置模板引擎和 body-parser 一定在 app.use(router) 挂载路由之前
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -31,6 +34,7 @@ app.use(bodyParser.json());
 // 把路由容器挂载到 app 服务中
 app.use(router);
 
+// 监听服务启动
 app.listen(port, () => {
   console.log(`running ${port}...`);
 });
