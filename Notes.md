@@ -1081,11 +1081,42 @@ add(10, 20, function(ret) {
   - exports
   - Node.js 才有
 - 浏览器中也可以像在 Node 中的模块一样来进行编程
-  - require.js 第三方库
-  - sea.js 第三方库
+  - AMD => require.js 第三方库
+  - CMD => sea.js 第三方库
 - Node.js 环境中对 JavaScript 进行了特殊的模块化支持：CommonJS
+
+### package-lock.json 作用
+
+- 锁定版本
+- 提升下载速度
 -----------------------------------------------------
 
+## 8. MangoDB
 
+### 关系型数据库和非关系型数据库
 
+表就是关系，或者说表与表之间存在关系
+
+- 所有的关系型数据库都需要通过 sql 语言操作
+- 所有的关系型数据库在操作之前都需要设计表结构
+- 而且数据表还支持约束
+  - 主键唯一
+  - 默认值
+  - 非空
+- 非关系型数据库非常灵活
+- 有的非关系型数据库是 key-value 对
+- MangoDB 是长的最像关系型数据库的非关系型数据库
+  - 数据库 -> 数据库
+  - 数据表 -> 集合（数组）
+  - 表记录 -> 文档对象
+- MangoDB 不需要设计表结构，更灵活
+
+### 下载和安装
+
+- 下载
+  - [MangoDB Community Server](https://www.mongodb.com/try/download/community)
+- 安装
+- 配置环境变量
+- 测试是否安装成功
+  - 控制台输入 `mangod --version`
 
