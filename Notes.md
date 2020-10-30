@@ -804,6 +804,32 @@ npm config list
 - `npm init -y` 按照默认配置自动生成 package.json 文件
 - 也可以`npm init`自己定义配置信息
 
+### Node 中的非模块成员
+
+在每个模块中，除了 `require`、`exports` 等模块相关的API之外，
+还有两个特殊的成员：
+
+- `__dirname` **动态获取** 可以从来获取当前文件模块所属目录的绝对路径
+- `__filename` **动态获取** 可以获取当前文件的绝对路径
+- `__dirname`和`__filename`是不受执行 node 命令所处路径影响的
+- 在文件操作中，使用的路径都统一使用动态的绝对路径
+- **模块中的路径标识和文件操作路径不同，就是相对于当前文件模块，相对路径不受node命令所处路径影响**
+
+```
+# ./a.txt 不是相对于当前文件路径
+# ./a.txt 是相对于执行 node 命令所处的终端路径
+# 文件操作路径中，相对路径设计的都是相对于执行 node 命令所处的路径（不是 bug，有其他使用场景，暂未学习到）
+# 所以在文件操作中，使用相对路径是不可靠的，需要使用绝对路径
+# 使用以上两个 Node 中的属性，动态获取绝对路径
+
+fs.readFile('./a.txt', 'utf8', (err, data) => {
+  if(err) {
+    throw err;
+  }
+  console.log(data);
+});
+```
+
 
 # Node.js 第4天
 
@@ -1087,11 +1113,13 @@ add(10, 20, function(ret) {
 
 ### package-lock.json 作用
 
-- 锁定版本
+- 锁定版本，保存 node_module 中安装包的信息（版本、下载地址）
 - 提升下载速度
 -----------------------------------------------------
 
-## 8. MangoDB
+# Node.js 第 5 天
+
+## 8. MongoDB
 
 ### 关系型数据库和非关系型数据库
 
@@ -1105,18 +1133,103 @@ add(10, 20, function(ret) {
   - 非空
 - 非关系型数据库非常灵活
 - 有的非关系型数据库是 key-value 对
-- MangoDB 是长的最像关系型数据库的非关系型数据库
+- MongoDB 是长的最像关系型数据库的非关系型数据库
   - 数据库 -> 数据库
   - 数据表 -> 集合（数组）
   - 表记录 -> 文档对象
-- MangoDB 不需要设计表结构，更灵活
+- MongoDB 不需要设计表结构，更灵活
+
+### MongoDB 数据库基本概念
+
+- 数据库（可以有多个）
+- 集合（一个数据库中可以有多个集合，集合类似于关系型数据库中的表）
+- 文档（一个集合可以有多个文档，文档结构灵活，无限制）
+- MongoDB 非常灵活，不需要像 MySQL 一样县创建数据库、表、设计表结构
+  - 当插入数据时，只需要指定往哪个数据库的哪个集合操作
+  - 一切都由 MongoDB 来帮助你自动完成建库建表
+
 
 ### 下载和安装
 
+参考：
+
+[菜鸟教程Windows MongoDB](https://www.runoob.com/mongodb/mongodb-window-install.html)
+
+[MongoDB官网](https://www.mongodb.com/)
+
 - 下载
-  - [MangoDB Community Server](https://www.mongodb.com/try/download/community)
+  - [MongoDB Community Server](https://www.mongodb.com/try/download/community)
 - 安装
-- 配置环境变量
-- 测试是否安装成功
-  - 控制台输入 `mangod --version`
+  - 选择 `custom` 自定义安装
+  - 然后一直Next
+  - 最后一步不要选择 Install MongoDB Compass，因为会特别慢（以亲身试验）
+  - MongoDB Compass 是 MongoDB 的图形界面管理工具，可以单独下载安装，地址：https://www.mongodb.com/download-center/compass
+
+### 启动和关闭数据库
+
+> 启动
+
+1. MongoDB将数据目录存储在 db 目录下，但是这个数据目录不会主动创建，需要在安装完成后手动创建。
+数据目录默认放在安装 MongoDB 的磁盘根目录下。
+
+```
+磁盘根目录\data\db\
+```
+
+更改默认的数据存储目录
+
+```
+mangod --dbpath=数据存储目录路径
+```
+
+2. 双击 MongoDB 的 bin 文件夹下的 mangod.exe 启动数据库，双击 mango.exe 连接数据库
+
+> 关闭
+
+`ctrl + c` 或者 关闭命令行窗口（点右上角的 x）
+
+### 连接和退出数据库
+
+> 连接
+
+双击 MongoDB 的 bin 文件夹下的 mango.exe 连接数据库
+
+> 退出
+
+```
+# mango 控制台输入以下命令
+exit
+```
+
+### 基本命令
+
+```
+# 查看显示所有的数据库
+show dbs
+
+# 查看当前操作的数据库
+db
+
+# 切换到指定的数据（如果没有会新建）
+use 数据库名称
+
+插入数据
+
+```
+
+### 在 Node 中操作 MongoDB 数据
+
+使用 mongoose 第三方包，mongoose 基于官方的 MongoDB 包再一次做了封装。
+
+> mongoose
+
+[英文官网](https://mongoosejs.com/)
+
+[中文官网](http://www.mongoosejs.net/)
+ 
+
+
+
+ # Node.js 第 6 天
+
 
